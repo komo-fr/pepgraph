@@ -25,18 +25,20 @@ class PepAcquirer(Acquirer):
         self._save_html(html, path)
 
     def _extract_pep_id(self, url: str) -> str:
+        """URL文字列から、PEPの番号を抽出します.
+
+        Args:
+            url (str): 抽出元のURL
+
+        Returns:
+            str: PEPの番号
         """
-        URL文字列から、PEPの番号を抽出する
-        :param url: 抽出元のURL
-        :return: PEPの番号 ()
-        """
+
         # TODO: どういう経緯で条件分岐が必要だったのか確認する
         if re.match('.+/pep-[0-9]{4}/#.+', url):
-            return [x[len('pep-'):] for x in url.split('/') if x][
-                -2]  # TODO: prefixの除去方法
+            return [x[len('pep-'):] for x in url.split('/') if x][-2]  # TODO: prefixの除去方法
         elif re.match('.+/pep-[0-9]{4}/{0,1}', url):
-            return [x[len('pep-'):] for x in url.split('/') if x][
-                -1]  # TODO: prefixの除去方法
+            return [x[len('pep-'):] for x in url.split('/') if x][-1]  # TODO: prefixの除去方法
 
     def _acquire_pep_html(self, pep_id: str,
                           input_local_dir_path=None) -> bytes:
@@ -66,11 +68,15 @@ class PepAcquirer(Acquirer):
 
     def _scrape_linked_pep_list(self, html: bytes,
                                 allow_duplication: bool = False) -> list:
+        """PEP一覧のHTMLデータから、リンクされているPEPを取得する（重複がある）
+
+        Args:
+            html (bytes): リンク抽出元のPEPのHTML
+            allow_duplication (bool, optional): Defaults to False. 同じPEPへのリンクが複数あった場合に重複を許すかどうか
+        Returns:
+            list: リンクされているPEPのリスト（重複あり）
         """
-        PEP一覧のHTMLデータから、リンクされているPEPを取得する（重複がある）
-        :param html: リンク抽出元のPEPのHTML
-        :return: リンクされているPEPのリスト（重複あり）
-        """
+
         soup = BeautifulSoup(html, "lxml")
         a_tags = soup.find_all("a", href=re.compile("/dev/peps/pep-[0-9]{4}"))
         link_destination_pep_ids = []
@@ -136,10 +142,13 @@ class PepAcquirer(Acquirer):
         raise NotImplementedError
 
     def _str2datetime(self, source_str: str) -> datetime:
-        """
-        文字列を日付型に変換する
-        :param source_str: 変換前の文字列
-        :return: 変換後の日付型。変換に失敗したら文字列'Failed to convert'を返す
+        """文字列を日付型に変換する
+
+        Args:
+            source_str (str): 変換前の文字列
+
+        Returns:
+            datetime: 変換後の日付型。変換に失敗したら文字列'Failed to convert'を返す
         """
 
         if (source_str != source_str) or not source_str:  # nullチェック
@@ -153,7 +162,7 @@ class PepAcquirer(Acquirer):
         for format_text in format_list:
             try:
                 converted = datetime.strptime(source_str, format_text)
-            except:  # TODO: ちゃんと指定する
+            except ValueError:  # TODO: ちゃんと指定する
                 continue
 
         if not converted:
@@ -189,10 +198,13 @@ class PepHeaderAcquirer(PepAcquirer):
         return df
 
     def _scrape(self, html: str) -> dict:
-        """
-        PEPの個別ページのHTML文字列から、基本情報（Title, Createdなど）を抽出する
-        :param html: 抽出元となるHTMLファイルの中身（文字列）
-        :return: 抽出した基本情報の辞書
+        """PEPの個別ページのHTML文字列から、基本情報（Title, Createdなど）を抽出します.
+
+        Args:
+            html (str): 抽出元となるHTMLファイルの中身（文字列）
+
+        Returns:
+            dict: 抽出した基本情報の辞書
         """
 
         soup = BeautifulSoup(html, "lxml")
@@ -234,11 +246,15 @@ class PepLinkDestinationAcquirer(PepAcquirer):
         return df
 
     def _scrape(self, html: bytes) -> dict:
+        """PEP一覧のHTMLデータから、リンク数を取得する
+
+        Args:
+            html (bytes): PEP一覧(PEP 0)のHTMLデータ
+
+        Returns:
+            dict: PEPごとのリンク数の辞書
         """
-        PEP一覧のHTMLデータから、リンク数を取得する
-        :param html: PEP一覧(PEP 0)のHTMLデータ
-        :return: PEPごとのリンク数の辞書
-        """
+
         link_destination_pep_ids = self._scrape_linked_pep_list(html, allow_duplication=True)
         count_dict = collections.Counter(link_destination_pep_ids)
         return dict(count_dict)
