@@ -5,19 +5,19 @@ import os
 import pandas as pd
 import networkx as nx
 
-from acquirer.pep_acquirer import PepAcquirer, PepHeaderAcquirer, PepLinkDestinationAcquirer
+from acquirer.pep_acquirer import PepHeaderAcquirer, PepLinkDestinationAcquirer
 from acquirer.python_release_acquirer import PythonReleaseAcquirer
 
 
 def to_adjacency_matrix(source_df: pd.DataFrame) -> pd.DataFrame:
     df = source_df.copy()
-    # 不足列を追加する
-    missing_columns = list(set(source_df.index) - set(df.columns))  # 行にあって、列にない
+    # 不足列を追加する (行にあって、列にない)
+    missing_columns = list(set(source_df.index) - set(df.columns))
     for column in missing_columns:
         df[column] = 0
 
-    # 不足行を追加する
-    missing_lines = list(set(df.columns) - set(df.index))  # 列にあって、行にない
+    # 不足行を追加する (列にあって、行にない場合)
+    missing_lines = list(set(df.columns) - set(df.index))
     for line in missing_lines:
         df.loc[line] = 0
 
@@ -92,8 +92,10 @@ def main(output_root_path: str=None) -> None:
                                pep_link_acquirer.fetch_start_datetime)
 
     # Save
-    fetch_datetime = pep_graph.graph['fetch_start_datetime'].strftime('%Y%m%d-%H%M%S')
-    file_name = 'pep_graph_{fetch_datetime}.gpickle'.format(fetch_datetime=fetch_datetime)
+    fetch_datetime = pep_graph.graph['fetch_start_datetime']
+    fetch_datetime_str = fetch_datetime.strftime('%Y%m%d-%H%M%S')
+    file_name_format = 'pep_graph_{fetch_datetime}.gpickle'
+    file_name = file_name_format.format(fetch_datetime=fetch_datetime_str)
     file_path = os.path.join(output_root_path, file_name)
 
     nx.write_gpickle(pep_graph, file_path)

@@ -6,7 +6,6 @@ import re
 
 from bs4 import BeautifulSoup
 import pandas as pd
-import numpy as np
 
 from .acquirer import Acquirer
 
@@ -121,8 +120,9 @@ class PepAcquirer(Acquirer):
             pep_dict = self._acquire_one_record(pep_id=pep_id,
                                                 input_local_dir_path=input_local_dir_path)
             peps_dict[pep_id] = pep_dict
-            print('[{}/{}] Completed to acquire: {}'.format(i+1, len(pep_ids), pep_id))  # TODO: logging
 
+            # TODO: make it logging
+            print('[{}/{}] Completed to acquire: {}'.format(i+1, len(pep_ids), pep_id))
         return peps_dict
 
     def _acquire_one_record(self, pep_id: str,
